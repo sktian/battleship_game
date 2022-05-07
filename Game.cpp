@@ -11,7 +11,7 @@ using namespace std;
 
 class GameImpl
 {
-  public:
+ public:
     GameImpl(int nRows, int nCols);
     int rows() const;
     int cols() const;
@@ -23,6 +23,17 @@ class GameImpl
     char shipSymbol(int shipId) const;
     string shipName(int shipId) const;
     Player* play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause);
+private:
+    struct Ship {
+        int m_length;
+        char m_symbol;
+        string m_name;
+        int m_id;
+    };
+    int m_nRows;
+    int m_nCols;
+    Ship m_Ships[100];
+    int m_nShips;
 };
 
 void waitForEnter()
@@ -32,18 +43,19 @@ void waitForEnter()
 }
 
 GameImpl::GameImpl(int nRows, int nCols)
+    :m_nRows(nRows), m_nCols(nCols), m_nShips(0)
 {
     // This compiles but may not be correct
 }
 
 int GameImpl::rows() const
 {
-    return -1;  // This compiles but may not be correct
+    return m_nRows;
 }
 
 int GameImpl::cols() const
 {
-    return -1;  // This compiles but may not be correct
+    return m_nCols;
 }
 
 bool GameImpl::isValid(Point p) const
@@ -58,27 +70,46 @@ Point GameImpl::randomPoint() const
 
 bool GameImpl::addShip(int length, char symbol, string name)
 {
-    return false;  // This compiles but may not be correct
+    if (length <= 0 || length > 10) {
+        return false;
+    }
+    if (symbol == 'X' || symbol == 'o' || symbol == '.') {
+        return false;
+    }
+    if (isprint(symbol) == 0) {
+        return false;
+    }
+    for (int i = 0; i < m_nShips; i++) {
+        if (symbol == m_Ships[i].m_symbol) {
+            return false;
+        }
+    }
+    m_Ships[m_nShips].m_id = m_nShips;
+    m_Ships[m_nShips].m_length = length;
+    m_Ships[m_nShips].m_name = name;
+    m_Ships[m_nShips].m_symbol = symbol;
+    m_nShips++;
+    return true;
 }
 
 int GameImpl::nShips() const
 {
-    return -1;  // This compiles but may not be correct
+    return m_nShips;
 }
 
 int GameImpl::shipLength(int shipId) const
 {
-    return -1;  // This compiles but may not be correct
+    return m_Ships[shipId].m_length;
 }
 
 char GameImpl::shipSymbol(int shipId) const
 {
-    return '?';  // This compiles but may not be correct
+    return m_Ships[shipId].m_symbol;
 }
 
 string GameImpl::shipName(int shipId) const
 {
-    return "";  // This compiles but may not be correct
+    return m_Ships[shipId].m_name;
 }
 
 Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool shouldPause)
