@@ -32,7 +32,7 @@ private:
     };
     int m_nRows;
     int m_nCols;
-    Ship m_Ships[100];
+    Ship m_Ships[50];
     int m_nShips;
 };
 

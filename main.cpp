@@ -26,8 +26,13 @@ int main() {
     Board b(g);
     Point p(0, 0);
     Point p1(1, 1);
-    b.placeShip(p, 0, HORIZONTAL);
-    b.placeShip(p1, 1, VERTICAL);
+    Point p2(2, 5);
+    Point p3(9, 7);
+    Point p4(8, 1);
+    Player* player = createPlayer("mediocre", "kevin", g);
+    if (player->placeShips(b)) {
+        cout << "sucess";
+    }
     b.display(false);
 }
 

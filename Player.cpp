@@ -79,15 +79,158 @@ bool getLineWithTwoIntegers(int& r, int& c)
 
 // TODO:  You need to replace this with a real class declaration and
 //        implementation.
-typedef AwfulPlayer HumanPlayer;
+class HumanPlayer : public Player {
+public:
+    HumanPlayer(string nm, const Game& g);
+    virtual ~HumanPlayer() {}
+    virtual bool isHuman();
+    virtual bool placeShips(Board& b);
+    virtual Point recommendAttack();
+    virtual void recordAttackResult(Point p, bool validShot, bool shotHit,
+        bool shipDestroyed, int shipId);
+    virtual void recordAttackByOpponent(Point p);
+};
+
+HumanPlayer::HumanPlayer(string nm, const Game& g) 
+    :Player(nm, g)
+{
+    
+}
+
+bool HumanPlayer::isHuman() {
+    return true;
+}
+
+bool HumanPlayer::placeShips(Board& b) {
+    for (int i = 0; i < game().nShips(); i++) {
+        cout << "Enter h or v for direction of " << game().shipName(i);
+        cout << " (length " << game().shipLength(i) << "): ";
+        char dir;
+        cin >> dir;
+        while (dir != 'v' && dir != 'h') {
+            cout << "Direction must be h or v." << endl;
+            cout << "Enter h or v for direction of " << game().shipName(i);
+            cout << " (length " << game().shipLength(i) << "): ";
+            cin >> dir;
+        }
+        Direction direct;
+        if (dir == 'h') {
+            direct = HORIZONTAL;
+        }
+        else {
+            direct = VERTICAL;
+        }
+        cout << "Enter row and column of leftmost cell (e.g., 3 5): ";
+        int r;
+        int c;
+        getLineWithTwoIntegers(r, c);
+        Point p(r, c);
+        while (!b.placeShip(p, i, direct)) {
+            cout << "The ship can not be placed there." << endl;
+            cout << "Enter row and column of leftmost cell (e.g., 3 5): ";
+            getLineWithTwoIntegers(r, c);
+            Point temp(r, c);
+            p = temp;
+        }
+        if (i < game().nShips() - 1) {
+            b.display(false);
+        }
+    }
+    return true;
+}
+
+Point HumanPlayer::recommendAttack() {
+    cout << "Enter the row and column to attack (e.g., 3 5):";
+    int r;
+    int c;
+    getLineWithTwoIntegers(r, c);
+    Point p(r, c);
+    return p;
+}
+
+void HumanPlayer::recordAttackResult(Point p, bool validShot, bool shotHit,
+    bool shipDestroyed, int shipId) {
+    // do nothing cus human player
+}
+
+void HumanPlayer::recordAttackByOpponent(Point p) {
+    // do nothing cus human player
+}
+
+
 
 //*********************************************************************
 //  MediocrePlayer
 //*********************************************************************
 
-// TODO:  You need to replace this with a real class declaration and
-//        implementation.
-typedef AwfulPlayer MediocrePlayer;
+class MediocrePlayer : public Player {
+public:
+    MediocrePlayer(string nm, const Game& g);
+    virtual ~MediocrePlayer() {}
+    virtual bool placeShips(Board& b);
+    virtual Point recommendAttack();
+    virtual void recordAttackResult(Point p, bool validShot, bool shotHit,
+        bool shipDestroyed, int shipId);
+    virtual void recordAttackByOpponent(Point p);
+private:
+    bool placeshipsrecursive(Board& b, int current_shipId);
+};
+
+MediocrePlayer::MediocrePlayer(string nm, const Game& g)
+    :Player(nm, g)
+{
+
+}
+
+bool MediocrePlayer::placeshipsrecursive(Board& b, int current_shipId) {
+    if (current_shipId == game().nShips())
+        return true;
+    for (int i = 0; i < game().cols(); i++) {
+        for (int j = 0; j < game().rows(); j++) {
+            Point p(i, j);
+            if (b.placeShip(p, current_shipId, HORIZONTAL) || b.placeShip(p, current_shipId, VERTICAL)) {
+                bool canplaceships = placeshipsrecursive(b, current_shipId + 1);
+                if (canplaceships) {
+                    return true;
+                }
+                else {
+                    b.unplaceShip(p, current_shipId, HORIZONTAL);
+                    b.unplaceShip(p, current_shipId, VERTICAL);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool MediocrePlayer::placeShips(Board& b) {
+    int attempts = 0;
+    while (attempts < 50) {
+        b.block();
+        if (placeshipsrecursive(b, 0)) {
+            b.unblock();
+            return true;
+        }
+        b.unblock();
+        attempts++;
+    }
+    return false;
+}
+
+Point MediocrePlayer::recommendAttack() {
+    Point p(0, 0);
+    return p;
+}
+
+void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId) {
+
+}
+
+void MediocrePlayer::recordAttackByOpponent(Point p) {
+    // do nothing because player is mediocre
+}
+
+
 // Remember that Mediocre::placeShips(Board& b) must start by calling
 // b.block(), and must call b.unblock() just before returning.
 

@@ -44,15 +44,19 @@ void BoardImpl::clear()
     }
 }
 
+
 void BoardImpl::block()
 {
-      // Block cells with 50% probability
-    for (int r = 0; r < m_game.rows(); r++)
-        for (int c = 0; c < m_game.cols(); c++)
-            if (randInt(2) == 0)
-            {
-                m_Board[r][c] = '#';
-            }
+    int cells = m_game.rows() * m_game.cols();
+    int num_blocked = 0;
+    while (num_blocked < cells / 2) {
+        int r = randInt(m_game.rows());
+        int c = randInt(m_game.cols());
+        if (m_Board[r][c] == '.') {
+            m_Board[r][c] = '#';
+            num_blocked++;
+        }
+    }
 }
 
 void BoardImpl::unblock()
@@ -61,10 +65,12 @@ void BoardImpl::unblock()
         for (int c = 0; c < m_game.cols(); c++)
         {
             if (m_Board[r][c] == '#') {
-                m_Board[r][c] == '.';
+                m_Board[r][c] = '.';
             }
         }
 }
+
+
 
 bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
 {
@@ -88,7 +94,7 @@ bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
                 return false;
             }
         }
-        for (int i = 0; i < m_game.shipLength(shipId); i++) { // second loop to place the points
+        for (int i = 0; i < m_game.shipLength(shipId); i++) { // second loop to place the symbols
             m_Board[topOrLeft.r][topOrLeft.c + i] = m_game.shipSymbol(shipId);
         }
     } else if (dir == VERTICAL) {
@@ -169,12 +175,56 @@ void BoardImpl::display(bool shotsOnly) const
 
 bool BoardImpl::attack(Point p, bool& shotHit, bool& shipDestroyed, int& shipId)
 {
-    return false; // This compiles, but may not be correct
+    if (p.r < 0 || p.r >= m_game.rows())
+        return false;
+    if (p.c < 0 || p.c >= m_game.cols())
+        return false;
+    if (m_Board[p.r][p.c] == 'o' || m_Board[p.r][p.c] == 'X')
+        return false;
+    if (m_Board[p.r][p.c] == '.') {
+        shotHit = false;
+        m_Board[p.r][p.c] = 'o';
+        return true;
+    }
+    else {
+        shotHit = true;
+        char temp_symbol = m_Board[p.r][p.c];
+        m_Board[p.r][p.c] = 'X';
+        if (p.r + 1 < m_game.rows() && m_Board[p.r + 1][p.c] == temp_symbol) {
+            shipDestroyed = false; // if we can advance south, and theres the same ship symbol there, then ship is not destroyed 
+        }
+        else if (p.r - 1 >= 0 && m_Board[p.r - 1][p.c] == temp_symbol) {
+            shipDestroyed = false;
+        }
+        else if (p.c + 1 < m_game.cols() && m_Board[p.r][p.c + 1] == temp_symbol) {
+            shipDestroyed = false;
+        }
+        else if (p.c - 1 >= 0 && m_Board[p.r][p.c - 1] == temp_symbol) {
+            shipDestroyed = false;
+        }
+        else {
+            shipDestroyed = true;
+            for (int i = 0; i < m_game.nShips(); i++) {
+                if (m_game.shipSymbol(i) == temp_symbol) {
+                    shipId = i;
+                    break;
+                }
+            }
+        }
+        return true;
+    }
 }
 
 bool BoardImpl::allShipsDestroyed() const
 {
-    return false; // This compiles, but may not be correct
+    for (int i = 0; i < m_game.rows(); i++) {
+        for (int j = 0; j < m_game.cols(); j++) {
+            if (m_Board[i][j] != '.' && m_Board[i][j] != 'X' && m_Board[i][j] != 'o') {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 //******************** Board functions ********************************
