@@ -6,34 +6,30 @@
 
 using namespace std;
 
+//bool addStandardShips(Game& g)
+//{
+//    return g.addShip(5, 'A', "aircraft carrier")  &&
+//           g.addShip(4, 'B', "battleship")  &&
+//           g.addShip(3, 'D', "destroyer")  &&
+//           g.addShip(3, 'S', "submarine")  &&
+//           g.addShip(2, 'P', "patrol boat");
+//}
+
 bool addStandardShips(Game& g)
 {
-    return g.addShip(5, 'A', "aircraft carrier")  &&
-           g.addShip(4, 'B', "battleship")  &&
-           g.addShip(3, 'D', "destroyer")  &&
-           g.addShip(3, 'S', "submarine")  &&
-           g.addShip(2, 'P', "patrol boat");
+    return g.addShip(5, 'A', "aircraft carrier");
 }
+
 
 
 int main() {
     Game g(10, 10);
-    g.addShip(5, 'A', "aircraft carrier");
-    g.addShip(4, 'B', "battleship");
-    g.addShip(3, 'D', "destroyer");
-    g.addShip(3, 'S', "submarine");
-    g.addShip(2, 'P', "patrol boat");
-    Board b(g);
-    Point p(0, 0);
-    Point p1(1, 1);
-    Point p2(2, 5);
-    Point p3(9, 7);
-    Point p4(8, 1);
-    Player* player = createPlayer("mediocre", "kevin", g);
-    if (player->placeShips(b)) {
-        cout << "sucess";
-    }
-    b.display(false);
+    addStandardShips(g);
+    Player* p1 = createPlayer("awful", "Mediocre Midori", g);
+    Player* p2 = createPlayer("awful", "Shuman the Human", g);
+    g.play(p1, p2);
+    delete p1;
+    delete p2;
 }
 
 //int main()

@@ -83,7 +83,7 @@ class HumanPlayer : public Player {
 public:
     HumanPlayer(string nm, const Game& g);
     virtual ~HumanPlayer() {}
-    virtual bool isHuman();
+    virtual bool isHuman() const;
     virtual bool placeShips(Board& b);
     virtual Point recommendAttack();
     virtual void recordAttackResult(Point p, bool validShot, bool shotHit,
@@ -97,7 +97,7 @@ HumanPlayer::HumanPlayer(string nm, const Game& g)
     
 }
 
-bool HumanPlayer::isHuman() {
+bool HumanPlayer::isHuman() const {
     return true;
 }
 
@@ -174,12 +174,24 @@ public:
     virtual void recordAttackByOpponent(Point p);
 private:
     bool placeshipsrecursive(Board& b, int current_shipId);
+    bool ischosen(Point p);
+    int m_state;
+    struct attack_result {
+        Point m_p;
+        bool m_validShot;
+        bool m_shotHit;
+        bool shipDestroyed;
+        int shipId;
+    };
+    attack_result m_history[100];
+    int m_history_size;
 };
 
 MediocrePlayer::MediocrePlayer(string nm, const Game& g)
     :Player(nm, g)
 {
-
+    m_state = 1;
+    m_history_size = 0;
 }
 
 bool MediocrePlayer::placeshipsrecursive(Board& b, int current_shipId) {
@@ -217,13 +229,36 @@ bool MediocrePlayer::placeShips(Board& b) {
     return false;
 }
 
+bool MediocrePlayer::ischosen(Point p) {
+    for (int i = 0; i < m_history_size; i++) {
+        if (m_history[i].m_p.c == p.c && m_history[i].m_p.r == p.r)
+            return true;
+    }
+    return false;
+}
+
 Point MediocrePlayer::recommendAttack() {
+    if (m_state == 1) {
+        Point p = game().randomPoint();
+        while (ischosen(p)) {
+            p = game().randomPoint();
+        }
+        return p;
+    }
+    else {
+
+    }
     Point p(0, 0);
     return p;
 }
 
 void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId) {
-
+    m_history[m_history_size].m_p = p;
+    m_history[m_history_size].m_validShot = validShot;
+    m_history[m_history_size].m_shotHit = shotHit;
+    m_history[m_history_size].shipDestroyed = shipDestroyed;
+    m_history[m_history_size].shipId = shipId;
+    m_history_size++;
 }
 
 void MediocrePlayer::recordAttackByOpponent(Point p) {
