@@ -190,16 +190,14 @@ bool BoardImpl::attack(Point p, bool& shotHit, bool& shipDestroyed, int& shipId)
         shotHit = true;
         char temp_symbol = m_Board[p.r][p.c];
         m_Board[p.r][p.c] = 'X';
-        if (p.r + 1 < m_game.rows() && m_Board[p.r + 1][p.c] == temp_symbol) {
-            shipDestroyed = false; // if we can advance south, and theres the same ship symbol there, then ship is not destroyed 
+        bool found = false;
+        for (int i = 0; i < m_game.rows(); i++) {
+            for (int j = 0; j < m_game.cols(); j++) {
+                if (m_Board[i][j] == temp_symbol)
+                    found = true;
+            }
         }
-        else if (p.r - 1 >= 0 && m_Board[p.r - 1][p.c] == temp_symbol) {
-            shipDestroyed = false;
-        }
-        else if (p.c + 1 < m_game.cols() && m_Board[p.r][p.c + 1] == temp_symbol) {
-            shipDestroyed = false;
-        }
-        else if (p.c - 1 >= 0 && m_Board[p.r][p.c - 1] == temp_symbol) {
+        if (found) {
             shipDestroyed = false;
         }
         else {

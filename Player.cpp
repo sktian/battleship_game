@@ -102,6 +102,8 @@ bool HumanPlayer::isHuman() const {
 }
 
 bool HumanPlayer::placeShips(Board& b) {
+    cout << this->name() << " must place " << game().nShips() << " ships." << endl;
+    b.display(false);
     for (int i = 0; i < game().nShips(); i++) {
         cout << "Enter h or v for direction of " << game().shipName(i);
         cout << " (length " << game().shipLength(i) << "): ";
@@ -175,14 +177,14 @@ public:
 private:
     bool placeshipsrecursive(Board& b, int current_shipId);
     bool ischosen(Point p);
-    int m_state;
+    bool allchosen();
     struct attack_result {
         Point m_p;
-        bool m_validShot;
-        bool m_shotHit;
-        bool shipDestroyed;
-        int shipId;
+        int m_state;
     };
+    Point state_2_coord;
+    Point possible_coords[16];
+    int n_coords;
     attack_result m_history[100];
     int m_history_size;
 };
@@ -190,8 +192,8 @@ private:
 MediocrePlayer::MediocrePlayer(string nm, const Game& g)
     :Player(nm, g)
 {
-    m_state = 1;
-    m_history_size = 0;
+    m_history[0].m_state = 1;
+    m_history_size = 1;
 }
 
 bool MediocrePlayer::placeshipsrecursive(Board& b, int current_shipId) {
@@ -230,34 +232,138 @@ bool MediocrePlayer::placeShips(Board& b) {
 }
 
 bool MediocrePlayer::ischosen(Point p) {
-    for (int i = 0; i < m_history_size; i++) {
+    for (int i = 1; i < m_history_size; i++) {
         if (m_history[i].m_p.c == p.c && m_history[i].m_p.r == p.r)
             return true;
     }
     return false;
 }
 
+bool MediocrePlayer::allchosen() {
+    for (int i = 0; i < n_coords; i++) {
+        if (!ischosen(possible_coords[i]))
+            return false;
+    }
+    return true;
+}
+
+
+
 Point MediocrePlayer::recommendAttack() {
-    if (m_state == 1) {
+    if (m_history[m_history_size - 1].m_state == 1) { // state 1
         Point p = game().randomPoint();
         while (ischosen(p)) {
             p = game().randomPoint();
         }
         return p;
     }
-    else {
-
+    else { // state 2
+        Point recommend = possible_coords[randInt(n_coords)];
+        while (ischosen(recommend)) {
+            if (allchosen()) {
+                m_history[m_history_size - 1].m_state = 1;
+                Point p = game().randomPoint();
+                while (ischosen(p)) {
+                    p = game().randomPoint();
+                }
+                return p;
+            }
+            recommend = possible_coords[randInt(n_coords)];
+        }
+        return recommend;
     }
-    Point p(0, 0);
-    return p;
 }
 
 void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId) {
     m_history[m_history_size].m_p = p;
-    m_history[m_history_size].m_validShot = validShot;
-    m_history[m_history_size].m_shotHit = shotHit;
-    m_history[m_history_size].shipDestroyed = shipDestroyed;
-    m_history[m_history_size].shipId = shipId;
+    if (m_history[m_history_size - 1].m_state == 1) { // previously in state 1 when the attack is made
+        if (shotHit) {
+            if (shipDestroyed) {
+                 m_history[m_history_size].m_state = 1;
+            }
+            else {
+                m_history[m_history_size].m_state = 2;
+                state_2_coord = p;
+                n_coords = 0;
+                int r = state_2_coord.r;
+                int c = state_2_coord.c;
+                int r_lower;
+                int r_upper;
+                int c_lower;
+                int c_upper;
+                if (r - 4 < 0) {
+                    r_lower = 0;
+                }
+                else {
+                    r_lower = r - 4;
+                }
+                if (r + 4 > game().rows() - 1) {
+                    r_upper = game().rows() - 1;
+                }
+                else {
+                    r_upper = r + 4;
+                }
+                if (c - 4 < 0) {
+                    c_lower = 0;
+                }
+                else {
+                    c_lower = c - 4;
+                }
+                if (c + 4 > game().cols() - 1) {
+                    c_upper = game().cols() - 1;
+                }
+                else {
+                    c_upper = c + 4;
+                }
+                for (int i = r_lower; i < r; i++) {
+                    Point temp(i, c);
+                    possible_coords[n_coords] = temp;
+                    n_coords++;
+                }
+                for (int i = r; i < r_upper + 1; i++) {
+                    Point temp(i, c);
+                    possible_coords[n_coords] = temp;
+                    n_coords++;
+                }
+                for (int i = c_lower; i < c; i++) {
+                    Point temp(r, i);
+                    possible_coords[n_coords] = temp;
+                    n_coords++;
+                }
+                for (int i = c; i < c_upper + 1; i++) {
+                    Point temp(r, i);
+                    possible_coords[n_coords] = temp;
+                    n_coords++;
+                }
+            }
+        }
+        else {
+            m_history[m_history_size].m_state = 1;
+        }
+    }
+    else { // previously in state 2 when the attack is made
+        if (shotHit) {
+            if (shipDestroyed) {
+                m_history[m_history_size].m_state = 1;
+            }
+            else {
+                if (allchosen()) {
+                    m_history[m_history_size].m_state = 1;
+                }
+                else {
+                    m_history[m_history_size].m_state = 2;
+                }
+            }
+        }
+        else {
+            if (allchosen()) {
+                m_history[m_history_size].m_state = 1;
+            }
+            else {
+                m_history[m_history_size].m_state = 2;
+            }
+        }
+    }
     m_history_size++;
 }
 

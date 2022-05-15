@@ -158,14 +158,14 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         else {
             cout << p1->name() << " wasted a shot at (" << point1.r << "," << point1.c << ")." << endl;
         }
+        if (b2.allShipsDestroyed()) {
+            player1won = true;
+            break;
+        }
         if (shouldPause) {
             cout << "Press enter to continue:";
             cin.ignore(10000, '\n');
         }
-        if (b2.allShipsDestroyed()) {
-            player1won = true;
-            break;
-        } 
         // player 2's turn 
         cout << p2->name() << "'s turn. Board for " << p1->name() << ":" << endl;
         if (p2->isHuman()) {
@@ -203,22 +203,24 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         else {
             cout << p2->name() << " wasted a shot at (" << point2.r << "," << point2.c << ")." << endl;
         }
-        if (shouldPause) {
-            cout << "Press enter to continue:";
-            cin.ignore(10000, '\n');
-        }
         if (b1.allShipsDestroyed()) {
             player2won = true;
             break;
         }
+        if (shouldPause) {
+            cout << "Press enter to continue:";
+            cin.ignore(10000, '\n');
+        }
     }
     if (player1won) {
+        cout << p1->name() << " wins!" << endl;
         if (p2->isHuman()) {
             b1.display(false);
         }
         return p1;
     }
     if (player2won) {
+        cout << p2->name() << " wins!" << endl;
         if (p1->isHuman()) {
             b2.display(false);
         }
