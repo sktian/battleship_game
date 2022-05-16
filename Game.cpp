@@ -45,7 +45,7 @@ void waitForEnter()
 GameImpl::GameImpl(int nRows, int nCols)
     :m_nRows(nRows), m_nCols(nCols), m_nShips(0)
 {
-    // This compiles but may not be correct
+    
 }
 
 int GameImpl::rows() const

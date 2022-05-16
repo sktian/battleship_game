@@ -19,8 +19,6 @@ class BoardImpl
     bool allShipsDestroyed() const;
 
   private:
-      // TODO:  Decide what private members you need.  Here's one that's likely
-      //        to be useful:
     const Game& m_game;
     char m_Board[10][10];
 };

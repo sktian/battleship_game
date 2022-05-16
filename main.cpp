@@ -6,28 +6,28 @@
 
 using namespace std;
 
-//bool addStandardShips(Game& g)
-//{
-//    return g.addShip(5, 'A', "aircraft carrier")  &&
-//           g.addShip(4, 'B', "battleship")  &&
-//           g.addShip(3, 'D', "destroyer")  &&
-//           g.addShip(3, 'S', "submarine")  &&
-//           g.addShip(2, 'P', "patrol boat");
-//}
-
 bool addStandardShips(Game& g)
 {
-    return g.addShip(9, 'A', "aircraft carrier");
+    return g.addShip(5, 'A', "aircraft carrier")  &&
+           g.addShip(4, 'B', "battleship")  &&
+           g.addShip(3, 'D', "destroyer")  &&
+           g.addShip(3, 'S', "submarine")  &&
+           g.addShip(2, 'P', "patrol boat");
 }
+
+//bool addStandardShips(Game& g)
+//{
+//    return g.addShip(9, 'A', "aircraft carrier");
+//}
 
 
 
 int main() {
     Game g(10, 10);
     addStandardShips(g);
-    Player* p1 = createPlayer("mediocre", "Germar", g);
-    Player* p2 = createPlayer("mediocre", "Kevin", g);
-    g.play(p1, p2);
+    Player* p1 = createPlayer("mediocre", "mediocre player", g);
+    Player* p2 = createPlayer("good", "good player", g);
+    g.play(p1, p2, true);
     delete p1;
     delete p2;
 }

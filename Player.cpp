@@ -4,6 +4,7 @@
 #include "globals.h"
 #include <iostream>
 #include <string>
+#include <stack> 
 
 using namespace std;
 
@@ -77,8 +78,6 @@ bool getLineWithTwoIntegers(int& r, int& c)
     return result;
 }
 
-// TODO:  You need to replace this with a real class declaration and
-//        implementation.
 class HumanPlayer : public Player {
 public:
     HumanPlayer(string nm, const Game& g);
@@ -165,6 +164,11 @@ void HumanPlayer::recordAttackByOpponent(Point p) {
 //  MediocrePlayer
 //*********************************************************************
 
+struct attack_result {
+    Point m_p;
+    int m_state;
+};
+
 class MediocrePlayer : public Player {
 public:
     MediocrePlayer(string nm, const Game& g);
@@ -176,18 +180,21 @@ public:
     virtual void recordAttackByOpponent(Point p);
 private:
     bool placeshipsrecursive(Board& b, int current_shipId);
-    bool ischosen(Point p);
     bool allchosen();
-    struct attack_result {
-        Point m_p;
-        int m_state;
-    };
+    attack_result m_history[100];
+    int m_history_size;
     Point state_2_coord;
     Point possible_coords[16];
     int n_coords;
-    attack_result m_history[100];
-    int m_history_size;
 };
+
+bool ischosen(Point p, attack_result m_history[], int m_history_size) {
+    for (int i = 1; i < m_history_size; i++) {
+        if (m_history[i].m_p.c == p.c && m_history[i].m_p.r == p.r)
+            return true;
+    }
+    return false;
+}
 
 MediocrePlayer::MediocrePlayer(string nm, const Game& g)
     :Player(nm, g)
@@ -231,17 +238,10 @@ bool MediocrePlayer::placeShips(Board& b) {
     return false;
 }
 
-bool MediocrePlayer::ischosen(Point p) {
-    for (int i = 1; i < m_history_size; i++) {
-        if (m_history[i].m_p.c == p.c && m_history[i].m_p.r == p.r)
-            return true;
-    }
-    return false;
-}
 
 bool MediocrePlayer::allchosen() {
     for (int i = 0; i < n_coords; i++) {
-        if (!ischosen(possible_coords[i]))
+        if (!ischosen(possible_coords[i], m_history, m_history_size))
             return false;
     }
     return true;
@@ -252,18 +252,18 @@ bool MediocrePlayer::allchosen() {
 Point MediocrePlayer::recommendAttack() {
     if (m_history[m_history_size - 1].m_state == 1) { // state 1
         Point p = game().randomPoint();
-        while (ischosen(p)) {
+        while (ischosen(p, m_history, m_history_size)) {
             p = game().randomPoint();
         }
         return p;
     }
     else { // state 2
         Point recommend = possible_coords[randInt(n_coords)];
-        while (ischosen(recommend)) {
+        while (ischosen(recommend, m_history, m_history_size)) {
             if (allchosen()) {
                 m_history[m_history_size - 1].m_state = 1;
                 Point p = game().randomPoint();
-                while (ischosen(p)) {
+                while (ischosen(p, m_history, m_history_size)) {
                     p = game().randomPoint();
                 }
                 return p;
@@ -372,16 +372,173 @@ void MediocrePlayer::recordAttackByOpponent(Point p) {
 }
 
 
-// Remember that Mediocre::placeShips(Board& b) must start by calling
-// b.block(), and must call b.unblock() just before returning.
 
 //*********************************************************************
 //  GoodPlayer
 //*********************************************************************
 
-// TODO:  You need to replace this with a real class declaration and
-//        implementation.
-typedef AwfulPlayer GoodPlayer;
+
+class GoodPlayer : public Player {
+public:
+    GoodPlayer(string nm, const Game& g);
+    virtual ~GoodPlayer() {}
+    virtual bool placeShips(Board& b);
+    virtual Point recommendAttack();
+    virtual void recordAttackResult(Point p, bool validShot, bool shotHit,
+        bool shipDestroyed, int shipId);
+    virtual void recordAttackByOpponent(Point p);
+private:
+    bool placeshipsrecursive(Board& b, int current_shipId);
+    attack_result m_history[100];
+    int m_history_size;
+    stack<Point> possiblecoords;
+};
+
+
+GoodPlayer::GoodPlayer(string nm, const Game& g) 
+    :Player(nm, g)
+{
+    m_history[0].m_state = 1;
+    m_history_size = 1;
+}
+
+bool GoodPlayer::placeshipsrecursive(Board& b, int current_shipId) {
+    if (current_shipId == game().nShips())
+        return true;
+    for (int i = 0; i < game().cols(); i++) {
+        for (int j = 0; j < game().rows(); j++) {
+            Point p(i, j);
+            if (b.placeShip(p, current_shipId, HORIZONTAL) || b.placeShip(p, current_shipId, VERTICAL)) {
+                bool canplaceships = placeshipsrecursive(b, current_shipId + 1);
+                if (canplaceships) {
+                    return true;
+                }
+                else {
+                    b.unplaceShip(p, current_shipId, HORIZONTAL);
+                    b.unplaceShip(p, current_shipId, VERTICAL);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool GoodPlayer::placeShips(Board& b) {
+    int attempts = 0;
+    while (attempts < 50) {
+        b.block();
+        if (placeshipsrecursive(b, 0)) {
+            b.unblock();
+            return true;
+        }
+        b.unblock();
+        attempts++;
+    }
+    return false;
+}
+
+Point GoodPlayer::recommendAttack() {
+    if (m_history[m_history_size - 1].m_state == 1) { // state 1
+        Point p = game().randomPoint();
+        while (ischosen(p, m_history, m_history_size)) {
+            p = game().randomPoint();
+        }
+        return p;
+    }
+    else { // state 2
+        if (possiblecoords.empty()) {
+            m_history[m_history_size - 1].m_state = 1;
+            Point p = game().randomPoint();
+            while (ischosen(p, m_history, m_history_size)) {
+                p = game().randomPoint();
+            }
+            return p;
+        }
+        Point p = possiblecoords.top();
+        possiblecoords.pop();
+        while (ischosen(p, m_history, m_history_size)) {
+            if (possiblecoords.empty()) {
+                m_history[m_history_size - 1].m_state = 1;
+                Point p = game().randomPoint();
+                while (ischosen(p, m_history, m_history_size)) {
+                    p = game().randomPoint();
+                }
+                return p;
+            }
+            p = possiblecoords.top();
+            possiblecoords.pop();
+        }
+        return p;
+    }
+}
+
+void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId) {
+    m_history[m_history_size].m_p = p;
+    if (m_history[m_history_size - 1].m_state == 1) { // previously in state 1 when the attack is made
+        if (shotHit) {
+            if (shipDestroyed) {
+                m_history[m_history_size].m_state = 1;
+            }
+            else {
+                m_history[m_history_size].m_state = 2;
+                if (p.r - 1 >= 0) { 
+                    Point p1(p.r - 1, p.c);
+                    if (!ischosen(p1, m_history, m_history_size))
+                        possiblecoords.push(p1);
+                }
+                if (p.r + 1 < game().rows()) {
+                    Point p1(p.r + 1, p.c);
+                    if (!ischosen(p1, m_history, m_history_size))
+                        possiblecoords.push(p1);
+                }
+                if (p.c - 1 >= 0) {
+                    Point p1(p.r, p.c - 1);
+                    if (!ischosen(p1, m_history, m_history_size))
+                        possiblecoords.push(p1);
+                }
+                if (p.c + 1 < game().cols()) {
+                    Point p1(p.r, p.c + 1);
+                    if (!ischosen(p1, m_history, m_history_size))
+                        possiblecoords.push(p1);
+                }
+            }
+        }
+        else {
+            m_history[m_history_size].m_state = 1;
+        }
+    }
+    else { // previously in state 2 when the attack is made
+        m_history[m_history_size].m_state = 2;
+        if (shotHit) {
+            if (p.r - 1 >= 0) {
+                Point p1(p.r - 1, p.c);
+                if (!ischosen(p1, m_history, m_history_size))
+                    possiblecoords.push(p1);
+            }
+            if (p.r + 1 < game().rows()) {
+                Point p1(p.r + 1, p.c);
+                if (!ischosen(p1, m_history, m_history_size))
+                    possiblecoords.push(p1);
+            }
+            if (p.c - 1 >= 0) {
+                Point p1(p.r, p.c - 1);
+                if (!ischosen(p1, m_history, m_history_size))
+                    possiblecoords.push(p1);
+            }
+            if (p.c + 1 < game().cols()) {
+                Point p1(p.r, p.c + 1);
+                if (!ischosen(p1, m_history, m_history_size))
+                    possiblecoords.push(p1);
+            }
+        }
+    }
+    m_history_size++;
+}
+
+void GoodPlayer::recordAttackByOpponent(Point p) {
+    
+}
+
 
 //*********************************************************************
 //  createPlayer
