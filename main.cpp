@@ -27,7 +27,7 @@ int main() {
     addStandardShips(g);
     Player* p1 = createPlayer("mediocre", "mediocre player", g);
     Player* p2 = createPlayer("good", "good player", g);
-    g.play(p1, p2, true);
+    g.play(p1, p2, false);
     delete p1;
     delete p2;
 }

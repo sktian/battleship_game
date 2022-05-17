@@ -184,7 +184,7 @@ private:
     attack_result m_history[100];
     int m_history_size;
     Point state_2_coord;
-    Point possible_coords[16];
+    Point possible_coords[100];
     int n_coords;
 };
 
@@ -389,6 +389,7 @@ public:
     virtual void recordAttackByOpponent(Point p);
 private:
     bool placeshipsrecursive(Board& b, int current_shipId);
+    bool is_next_to(Point p, attack_result m_history[], int m_history_size) const;
     attack_result m_history[100];
     int m_history_size;
     stack<Point> possiblecoords;
@@ -437,10 +438,38 @@ bool GoodPlayer::placeShips(Board& b) {
     return false;
 }
 
+bool GoodPlayer::is_next_to(Point p, attack_result m_history[], int m_history_size) const {
+    if (p.r - 1 >= 0) {
+        Point p1(p.r - 1, p.c);
+        if (ischosen(p1, m_history, m_history_size)) {
+            return true;
+        }
+    }
+    if (p.r + 1 < game().rows()) {
+        Point p1(p.r + 1, p.c);
+        if (ischosen(p1, m_history, m_history_size)) {
+            return true;
+        }
+    }
+    if (p.c - 1 >= 0) {
+        Point p1(p.r, p.c - 1);
+        if (ischosen(p1, m_history, m_history_size)) {
+            return true;
+        }
+    }
+    if (p.c + 1 < game().cols()) {
+        Point p1(p.r, p.c + 1);
+        if (ischosen(p1, m_history, m_history_size)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Point GoodPlayer::recommendAttack() {
     if (m_history[m_history_size - 1].m_state == 1) { // state 1
         Point p = game().randomPoint();
-        while (ischosen(p, m_history, m_history_size)) {
+        while (ischosen(p, m_history, m_history_size) || is_next_to(p, m_history, m_history_size)) {
             p = game().randomPoint();
         }
         return p;
@@ -449,25 +478,13 @@ Point GoodPlayer::recommendAttack() {
         if (possiblecoords.empty()) {
             m_history[m_history_size - 1].m_state = 1;
             Point p = game().randomPoint();
-            while (ischosen(p, m_history, m_history_size)) {
+            while (ischosen(p, m_history, m_history_size) || is_next_to(p, m_history, m_history_size)) {
                 p = game().randomPoint();
             }
             return p;
         }
         Point p = possiblecoords.top();
         possiblecoords.pop();
-        while (ischosen(p, m_history, m_history_size)) {
-            if (possiblecoords.empty()) {
-                m_history[m_history_size - 1].m_state = 1;
-                Point p = game().randomPoint();
-                while (ischosen(p, m_history, m_history_size)) {
-                    p = game().randomPoint();
-                }
-                return p;
-            }
-            p = possiblecoords.top();
-            possiblecoords.pop();
-        }
         return p;
     }
 }
