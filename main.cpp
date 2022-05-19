@@ -25,9 +25,9 @@ bool addStandardShips(Game& g)
 int main() {
     Game g(10, 10);
     addStandardShips(g);
-    Player* p1 = createPlayer("mediocre", "mediocre player", g);
-    Player* p2 = createPlayer("good", "good player", g);
-    g.play(p1, p2, false);
+    Player* p1 = createPlayer("human", "germar", g);
+    Player* p2 = createPlayer("human", "kevin", g);
+    g.play(p1, p2, true);
     delete p1;
     delete p2;
 }
@@ -80,8 +80,8 @@ int main() {
 //                 << " =============================" << endl;
 //            Game g(10, 10);
 //            addStandardShips(g);
-//            Player* p1 = createPlayer("awful", "Awful Audrey", g);
-//            Player* p2 = createPlayer("mediocre", "Mediocre Mimi", g);
+//            Player* p1 = createPlayer("mediocre", "mediocre Audrey", g);
+//            Player* p2 = createPlayer("good", "good Mimi", g);
 //            Player* winner = (k % 2 == 1 ?
 //                                g.play(p1, p2, false) : g.play(p2, p1, false));
 //            if (winner == p2)
@@ -89,7 +89,7 @@ int main() {
 //            delete p1;
 //            delete p2;
 //        }
-//        cout << "The mediocre player won " << nMediocreWins << " out of "
+//        cout << "The good player won " << nMediocreWins << " out of "
 //             << NTRIALS << " games." << endl;
 //          // We'd expect a mediocre player to win most of the games against
 //          // an awful player.  Similarly, a good player should outperform

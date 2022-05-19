@@ -124,7 +124,10 @@ bool HumanPlayer::placeShips(Board& b) {
         cout << "Enter row and column of leftmost cell (e.g., 3 5): ";
         int r;
         int c;
-        getLineWithTwoIntegers(r, c);
+        while (!getLineWithTwoIntegers(r, c)) {
+            cout << "You must enter two integers." << endl;
+            cout << "Enter row and column of leftmost cell (e.g., 3 5): ";
+        }
         Point p(r, c);
         while (!b.placeShip(p, i, direct)) {
             cout << "The ship can not be placed there." << endl;
@@ -469,8 +472,18 @@ bool GoodPlayer::is_next_to(Point p, attack_result m_history[], int m_history_si
 Point GoodPlayer::recommendAttack() {
     if (m_history[m_history_size - 1].m_state == 1) { // state 1
         Point p = game().randomPoint();
+        int attempts = 0;
         while (ischosen(p, m_history, m_history_size) || is_next_to(p, m_history, m_history_size)) {
+            if (attempts > 100) {
+                break;
+            }
             p = game().randomPoint();
+            attempts++;
+        }
+        if (attempts > 100) {
+            while (ischosen(p, m_history, m_history_size)) {
+                p = game().randomPoint();
+            }
         }
         return p;
     }
@@ -478,8 +491,18 @@ Point GoodPlayer::recommendAttack() {
         if (possiblecoords.empty()) {
             m_history[m_history_size - 1].m_state = 1;
             Point p = game().randomPoint();
+            int attempts = 0;
             while (ischosen(p, m_history, m_history_size) || is_next_to(p, m_history, m_history_size)) {
+                if (attempts > 100) {
+                    break;
+                }
                 p = game().randomPoint();
+                attempts++;
+            }
+            if (attempts > 100) {
+                while (ischosen(p, m_history, m_history_size)) {
+                    p = game().randomPoint();
+                }
             }
             return p;
         }

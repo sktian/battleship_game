@@ -122,7 +122,7 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         return nullptr;
     while (!b1.allShipsDestroyed() && !b2.allShipsDestroyed()) {
         // player 1's turn 
-        cout << p1->name() << "'s turn. Board for " << p2->name() << ":" << endl;
+        cout << p1->name() << "'s turn.  Board for " << p2->name() << ":" << endl;
         if (p1->isHuman()) {
             b2.display(true);
         }
@@ -167,7 +167,7 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
             cin.ignore(10000, '\n');
         }
         // player 2's turn 
-        cout << p2->name() << "'s turn. Board for " << p1->name() << ":" << endl;
+        cout << p2->name() << "'s turn.  Board for " << p1->name() << ":" << endl;
         if (p2->isHuman()) {
             b1.display(true);
         }
@@ -215,6 +215,7 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
     if (player1won) {
         cout << p1->name() << " wins!" << endl;
         if (p2->isHuman()) {
+            cout << "Here is where " << p1->name() << "'s ships were:" << endl;
             b1.display(false);
         }
         return p1;
@@ -222,6 +223,7 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
     if (player2won) {
         cout << p2->name() << " wins!" << endl;
         if (p1->isHuman()) {
+            cout << "Here is where " << p2->name() << "'s ships were:" << endl;
             b2.display(false);
         }
         return p2;
